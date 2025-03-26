@@ -14,7 +14,16 @@ impl Config{
         }
         let query = args[1].clone();
         let path = args[2].clone();
-        let ignore_case = env::var("IGNORE_CASE").is_ok();
+        //let ignore_case = env::var("IGNORE_CASE").is_ok();
+        let ignore_case = if let Some(opt) = args.get(3) {
+            match opt.as_str() {
+                "cs" => false,
+                "ncs" => true,
+                _ => return Err("unknown argument"),
+            }
+        } else {
+            env::var("IGNORE_CASE").is_ok()
+        };
 
         Ok(Config {
             query: query,
