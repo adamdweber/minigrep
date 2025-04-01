@@ -8,14 +8,18 @@ pub struct Config {
     pub ignore_case: bool,
 }
 impl Config{
-    pub fn build(args: &[String]) -> Result<Config, &'static str> {
-        if args.len() < 3 {
-            return Err("missing arguments");
-        }
-        let query = args[1].clone();
-        let path = args[2].clone();
+    pub fn build(mut args: impl Iterator<Item=String>) -> Result<Config, &'static str> {
+        args.next(); //first arg is path for this app
+        let query = match args.next() {
+            Some(arg) => arg,
+            None => return Err("Missing query string")
+        };
+        let path = match args.next() {
+            Some(arg) => arg,
+            None => return Err("Missing file path")
+        };
         //let ignore_case = env::var("IGNORE_CASE").is_ok();
-        let ignore_case = if let Some(opt) = args.get(3) {
+        let ignore_case = if let Some(opt) = args.next() {
             match opt.as_str() {
                 "cs" => false,
                 "ncs" => true,
@@ -50,14 +54,10 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
 }
 
 pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
-    let mut results = Vec::new();
-
-    for line in contents.lines() {
-        if line.contains(query) {
-            results.push(line);
-        }
-    }
-    results
+    contents
+        .lines()
+        .filter(|line| line.contains(query))
+        .collect()
 }
 
 pub fn search_case_insensitive<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
